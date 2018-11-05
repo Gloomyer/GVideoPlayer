@@ -2,6 +2,7 @@ package com.gloomyer.gvideoplayer.view;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
 import android.util.AttributeSet;
 import android.view.Surface;
@@ -14,6 +15,7 @@ import com.gloomyer.gvideoplayer.constants.GPlayViewUIState;
 import com.gloomyer.gvideoplayer.interfaces.GOnPlayStateChangeListener;
 import com.gloomyer.gvideoplayer.interfaces.GOnPreparedListener;
 import com.gloomyer.gvideoplayer.interfaces.GPlayStateChangeListener;
+import com.gloomyer.gvideoplayer.interfaces.GVideoScaleListener;
 import com.gloomyer.gvideoplayer.interfaces.IMeidiaPlayer;
 import com.gloomyer.gvideoplayer.playerimpl.AndroidMeidiaPlayerImpl;
 import com.gloomyer.gvideoplayer.utils.GPlayUtils;
@@ -37,6 +39,7 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
     private TextureView mTextureView; //视频渲染View
     private GPlayViewUIState mPlayUIState; //当前播放器的UI状态
     private GVideoControllerView mControllerView;
+    private GVideoScaleListener mVideoScaleListener;
     private String videoUrl;
 
     public GVideoView(Context context) {
@@ -60,7 +63,6 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
         mTextureView = new TextureView(context);
         mControllerView = new GVideoControllerView(context);
         setUIState(GPlayViewUIState.LIST_ITEM);
-
         mTextureView.setSurfaceTextureListener(this);
     }
 
@@ -152,6 +154,9 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
             mMeidiaPlayer.setPlayStateChangeListener(new GPlayStateChangeListener() {
                 @Override
                 public void onPlayStateChange(GPlayState state) {
+                    if (mOnPlayStateChangeListener != null) {
+                        mOnPlayStateChangeListener.onChanged(state);
+                    }
                     mControllerView.setUIState(state, mPlayUIState);
                 }
             });
@@ -164,6 +169,7 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
             mMeidiaPlayer.setDataSource(videoUrl);
             mMeidiaPlayer.setSurface(new Surface(mTextureView.getSurfaceTexture()));
             mMeidiaPlayer.prepare();
+            setVideoScale();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -208,6 +214,7 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         if (isPlaying()) {
             mMeidiaPlayer.setSurface(new Surface(surface));
+            setVideoScale();
         }
     }
 
@@ -224,5 +231,56 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
     @Override
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {
 
+    }
+
+    /**
+     * 设置视频缩放规则
+     *
+     * @param mListener
+     */
+    public void setVideoScaleListener(GVideoScaleListener mListener) {
+        this.mVideoScaleListener = mListener;
+    }
+
+    /**
+     * 设置视频缩放规则
+     */
+    private void setVideoScale() {
+        Matrix matrix = null;
+        if (mVideoScaleListener != null) {
+            matrix = mVideoScaleListener.getMatrixRules(mPlayUIState);
+        }
+
+        if (matrix == null) {
+            //使用默认规则
+            matrix = new Matrix();
+            float mVideoWidth = mMeidiaPlayer == null ? 0 : mMeidiaPlayer.getVideoWidth();
+            float mVideoHeight = mMeidiaPlayer == null ? 0 : mMeidiaPlayer.getVideoHeight();
+            float sx = (float) mContainer.getWidth() / mVideoWidth;
+            float sy = (float) mContainer.getHeight() / mVideoHeight;
+            if (mPlayUIState == GPlayViewUIState.LIST_ITEM) {
+                float maxScale = Math.max(sx, sy);
+                //第1步:把视频区移动到View区,使两者中心点重合.
+                matrix.preTranslate((mContainer.getWidth() - mVideoWidth) / 2, (mContainer.getHeight() - mVideoHeight) / 2);
+                //第2步:因为默认视频是fitXY的形式显示的,所以首先要缩放还原回来.
+                matrix.preScale(mVideoWidth / (float) mContainer.getWidth(), mVideoHeight / (float) mContainer.getHeight());
+                //第3步,等比例放大或缩小,直到视频区的一边超过View一边, 另一边与View的另一边相等. 因为超过的部分超出了View的范围,所以是不会显示的,相当于裁剪了.
+                matrix.postScale(maxScale, maxScale, mContainer.getWidth() / 2, mContainer.getHeight() / 2);//后两个参数坐标是以整个View的坐标系以参考的
+            } else {
+                //第1步:把视频区移动到View区,使两者中心点重合.
+                matrix.preTranslate((getWidth() - mVideoWidth) / 2, (getHeight() - mVideoHeight) / 2);
+                //第2步:因为默认视频是fitXY的形式显示的,所以首先要缩放还原回来.
+                matrix.preScale(mVideoWidth / (float) getWidth(), mVideoHeight / (float) getHeight());
+                //第3步,等比例放大或缩小,直到视频区的一边和View一边相等.如果另一边和view的一边不相等，则留下空隙
+                if (sx >= sy) {
+                    matrix.postScale(sy, sy, getWidth() / 2, getHeight() / 2);
+                } else {
+                    matrix.postScale(sx, sx, getWidth() / 2, getHeight() / 2);
+                }
+            }
+        }
+
+        mTextureView.setTransform(matrix);
+        mTextureView.postInvalidate();
     }
 }

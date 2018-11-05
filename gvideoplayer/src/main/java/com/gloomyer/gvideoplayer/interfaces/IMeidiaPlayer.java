@@ -86,4 +86,18 @@ public interface IMeidiaPlayer {
      * @return
      */
     GPlayState getPlayState();
+
+    /**
+     * 返回视频宽度
+     *
+     * @return
+     */
+    int getVideoWidth();
+
+    /**
+     * 返回视频高度
+     *
+     * @return
+     */
+    int getVideoHeight();
 }

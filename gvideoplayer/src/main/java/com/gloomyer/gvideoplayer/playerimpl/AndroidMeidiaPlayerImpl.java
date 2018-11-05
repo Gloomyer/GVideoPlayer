@@ -99,6 +99,16 @@ public class AndroidMeidiaPlayerImpl implements IMeidiaPlayer, MediaPlayer.OnBuf
     }
 
     @Override
+    public int getVideoWidth() {
+        return mMediaPlayer.getVideoWidth();
+    }
+
+    @Override
+    public int getVideoHeight() {
+        return mMediaPlayer.getVideoHeight();
+    }
+
+    @Override
     public void onBufferingUpdate(MediaPlayer mediaPlayer, int i) {
         if (mOnBufferingUpdateListener != null)
             mOnBufferingUpdateListener.onBufferUpdate(i);
