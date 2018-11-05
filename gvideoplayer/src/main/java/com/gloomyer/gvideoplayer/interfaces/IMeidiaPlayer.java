@@ -100,4 +100,47 @@ public interface IMeidiaPlayer {
      * @return
      */
     int getVideoHeight();
+
+    /**
+     * 设置是否循环播放
+     *
+     * @param isLoop
+     */
+    void setLoop(boolean isLoop);
+
+    /**
+     * 是否循环播放
+     *
+     * @return
+     */
+    boolean isLoop();
+
+    /**
+     * 获取视频总时长
+     *
+     * @return
+     */
+    long getDuration();
+
+    /**
+     * 获取视频当前播放位置
+     *
+     * @return
+     */
+    long getCurrentPosition();
+
+    /**
+     * 设置视频播放回掉监听
+     *
+     * @param mListener
+     */
+    void setVideoProgressListener(GVideoProgressListener mListener);
+
+    /**
+     * 设置播放进度
+     *
+     * @param progress
+     */
+    void setProgress(long progress);
+
 }

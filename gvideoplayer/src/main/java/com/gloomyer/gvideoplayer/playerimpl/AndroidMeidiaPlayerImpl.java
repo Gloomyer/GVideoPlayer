@@ -1,6 +1,7 @@
 package com.gloomyer.gvideoplayer.playerimpl;
 
 import android.media.MediaPlayer;
+import android.os.Handler;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 
@@ -9,6 +10,7 @@ import com.gloomyer.gvideoplayer.interfaces.GOnBufferingUpdateListener;
 import com.gloomyer.gvideoplayer.interfaces.GOnPreparedListener;
 import com.gloomyer.gvideoplayer.interfaces.GPlayCompletionListener;
 import com.gloomyer.gvideoplayer.interfaces.GPlayStateChangeListener;
+import com.gloomyer.gvideoplayer.interfaces.GVideoProgressListener;
 import com.gloomyer.gvideoplayer.interfaces.IMeidiaPlayer;
 
 import java.io.IOException;
@@ -16,7 +18,11 @@ import java.io.IOException;
 /**
  * android 系统自带播放器实现类
  */
-public class AndroidMeidiaPlayerImpl implements IMeidiaPlayer, MediaPlayer.OnBufferingUpdateListener, MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener {
+public class AndroidMeidiaPlayerImpl implements IMeidiaPlayer,
+        MediaPlayer.OnBufferingUpdateListener,
+        MediaPlayer.OnPreparedListener,
+        MediaPlayer.OnCompletionListener,
+        Runnable {
 
     private MediaPlayer mMediaPlayer;
     private GOnBufferingUpdateListener mOnBufferingUpdateListener;
@@ -24,12 +30,17 @@ public class AndroidMeidiaPlayerImpl implements IMeidiaPlayer, MediaPlayer.OnBuf
     private GPlayStateChangeListener mPlayStateChangeListener;
     private GPlayCompletionListener mPlayCompletionListener;
     private GPlayState mPlayState;
+    private GVideoProgressListener mVideoProgressListener;
+    private boolean progressThreadIsRun; //视频播放进度线程开启状态
+    private long lastProgress = 0; //记录上次视频播放的值，用于合理时间退出线程
+    private Handler mHandler;
 
     public AndroidMeidiaPlayerImpl() {
         mMediaPlayer = new MediaPlayer();
         mMediaPlayer.setOnBufferingUpdateListener(this);
         mMediaPlayer.setOnPreparedListener(this);
         mMediaPlayer.setOnCompletionListener(this);
+        mMediaPlayer.setLooping(true);
         mPlayState = GPlayState.Idle;
     }
 
@@ -109,6 +120,47 @@ public class AndroidMeidiaPlayerImpl implements IMeidiaPlayer, MediaPlayer.OnBuf
     }
 
     @Override
+    public void setLoop(boolean isLoop) {
+        mMediaPlayer.setLooping(isLoop);
+    }
+
+    @Override
+    public boolean isLoop() {
+        return mMediaPlayer.isLooping();
+    }
+
+    @Override
+    public long getDuration() {
+        return mMediaPlayer.getDuration();
+    }
+
+    @Override
+    public long getCurrentPosition() {
+        return mMediaPlayer.getCurrentPosition();
+    }
+
+    @Override
+    public void setVideoProgressListener(GVideoProgressListener mListener) {
+        this.mVideoProgressListener = mListener;
+        //开启视频进度监听回掉线程
+        if (!progressThreadIsRun) {
+            if (mHandler == null)
+                mHandler = new Handler();
+            progressThreadIsRun = true;
+            new Thread(this).start();
+        }
+    }
+
+    @Override
+    public void setProgress(long progress) {
+        try {
+            mMediaPlayer.seekTo((int) progress);
+        } catch (Exception e) {
+            mMediaPlayer.seekTo(Integer.MAX_VALUE);
+        }
+    }
+
+    @Override
     public void onBufferingUpdate(MediaPlayer mediaPlayer, int i) {
         if (mOnBufferingUpdateListener != null)
             mOnBufferingUpdateListener.onBufferUpdate(i);
@@ -138,5 +190,30 @@ public class AndroidMeidiaPlayerImpl implements IMeidiaPlayer, MediaPlayer.OnBuf
         this.mPlayState = state;
         if (mPlayStateChangeListener != null)
             mPlayStateChangeListener.onPlayStateChange(state);
+    }
+
+    @Override
+    public void run() {
+        while (progressThreadIsRun) {
+
+            if (mMediaPlayer.getCurrentPosition() != lastProgress
+                    && getPlayState() != GPlayState.Idle)
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (mVideoProgressListener != null)
+                            mVideoProgressListener.onProgress(
+                                    mMediaPlayer.getCurrentPosition(),
+                                    mMediaPlayer.getDuration());
+                    }
+                });
+            lastProgress = mMediaPlayer.getCurrentPosition();
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        progressThreadIsRun = false;
     }
 }

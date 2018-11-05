@@ -5,6 +5,7 @@ package com.gloomyer.gvideoplayer.constants;
  */
 public enum GPlayState {
     Idle,
+    Preare, //打算播放等待设置url
     Prepareing, //准备中
     PrepareFinish, //准备完成
     Playing, //播放中

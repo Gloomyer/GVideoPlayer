@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.gloomyer.gvideoplayer.utils.GPlayRecyclerViewAutoPlayHelper;
 import com.gloomyer.gvideoplayer.view.GVideoView;
 
 public class MainActivity extends AppCompatActivity {
@@ -22,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
         rvVideos = findViewById(R.id.rv_videos);
         rvVideos.setLayoutManager(new LinearLayoutManager(this));
         rvVideos.setAdapter(new MyAdapter());
+        GPlayRecyclerViewAutoPlayHelper.get().bind(rvVideos, R.id.gvv_video);
     }
 
     private class MyHolder extends RecyclerView.ViewHolder {
@@ -46,13 +48,17 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(@NonNull final MyHolder holder, int i) {
-            holder.gvvVideo.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    holder.gvvVideo.setVideoUrl("https://gloomyer.com/1.mp4");
-                    holder.gvvVideo.start();
-                }
-            });
+//            holder.gvvVideo.setVideoUrl("https://f.us.sinaimg.cn//000s19eRlx07oXbpXFy0010402008Ibi0k010.mp4?label=mp4_ld&template=640x360.28.0&Expires=1541411914&ssig=rVd7J%2Bfw2Z&KID=unistore,video");
+            holder.gvvVideo.setTitle("我是一个大标题~");
+            holder.gvvVideo.setVideoUrl("https://f.us.sinaimg.cn//000s19eRlx07oXbpXFy0010402008Ibi0k010.mp4?label=mp4_ld&template=640x360.28.0&Expires=1541415533&ssig=Vw3lmOT4UV&KID=unistore,video");
+//            holder.gvvVideo.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//                    //holder.gvvVideo.setVideoUrl("https://f.us.sinaimg.cn/003tGg0Wlx07oXp6qtnq0104020010vN0k010.mp4?label=mp4_ld&template=360x448.28.0&Expires=1541403304&ssig=M%2B0paeOPSe&KID=unistore,video");
+////                    holder.gvvVideo.setVideoUrl("https://gloomyer.com/1.mp4");
+//                    holder.gvvVideo.start();
+//                }
+//            });
         }
 
         @Override
