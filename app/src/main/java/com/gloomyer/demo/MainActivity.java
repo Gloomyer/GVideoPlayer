@@ -1,4 +1,4 @@
-package com.gloomyer.gvideoplayer;
+package com.gloomyer.demo;
 
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.bumptech.glide.Glide;
+import com.gloomyer.demo.R;
 import com.gloomyer.gvideoplayer.utils.GPlayRecyclerViewAutoPlayHelper;
 import com.gloomyer.gvideoplayer.view.GVideoView;
 
