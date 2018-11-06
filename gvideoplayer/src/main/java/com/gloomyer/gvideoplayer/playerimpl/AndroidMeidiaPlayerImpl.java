@@ -1,5 +1,7 @@
 package com.gloomyer.gvideoplayer.playerimpl;
 
+import android.content.Context;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Handler;
 import android.view.Surface;
@@ -24,6 +26,7 @@ public class AndroidMeidiaPlayerImpl implements IMeidiaPlayer,
         MediaPlayer.OnCompletionListener,
         Runnable {
 
+    private static int volume = 50;//音量大小 默认100
     private MediaPlayer mMediaPlayer;
     private GOnBufferingUpdateListener mOnBufferingUpdateListener;
     private GOnPreparedListener mOnPreparedListener;
@@ -34,15 +37,26 @@ public class AndroidMeidiaPlayerImpl implements IMeidiaPlayer,
     private boolean progressThreadIsRun; //视频播放进度线程开启状态
     private long lastProgress = 0; //记录上次视频播放的值，用于合理时间退出线程
     private Handler mHandler;
+    private boolean mute;
+    private AudioManager mAudioManager;
 
-    public AndroidMeidiaPlayerImpl() {
+    public AndroidMeidiaPlayerImpl(Context context) {
         mMediaPlayer = new MediaPlayer();
         mMediaPlayer.setOnBufferingUpdateListener(this);
         mMediaPlayer.setOnPreparedListener(this);
         mMediaPlayer.setOnCompletionListener(this);
         mMediaPlayer.setLooping(true);
         mPlayState = GPlayState.Idle;
+        initAudioManager(context);
     }
+
+    private void initAudioManager(Context context) {
+        if (mAudioManager == null) {
+            mAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            mAudioManager.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK);
+        }
+    }
+
 
     @Override
     public void prepare() {
@@ -158,6 +172,28 @@ public class AndroidMeidiaPlayerImpl implements IMeidiaPlayer,
         } catch (Exception e) {
             mMediaPlayer.seekTo(Integer.MAX_VALUE);
         }
+    }
+
+    @Override
+    public void setMute(boolean mute) {
+        if (mute) {
+            mMediaPlayer.setVolume(0, 0);
+        } else {
+            mMediaPlayer.setVolume(1, 1);
+        }
+        this.mute = mute;
+    }
+
+    private float getVolume() {
+        if (mAudioManager != null) {
+            return mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        }
+        return 0;
+    }
+
+    @Override
+    public boolean isMute() {
+        return mute;
     }
 
     @Override

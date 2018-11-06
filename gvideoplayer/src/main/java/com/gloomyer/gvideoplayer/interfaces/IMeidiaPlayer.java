@@ -143,4 +143,17 @@ public interface IMeidiaPlayer {
      */
     void setProgress(long progress);
 
+    /**
+     * 设置静音
+     *
+     * @param mute
+     */
+    void setMute(boolean mute);
+
+    /**
+     * 判断是否属于静音状态
+     *
+     * @return
+     */
+    boolean isMute();
 }

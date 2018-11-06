@@ -11,6 +11,7 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 
 import com.gloomyer.gvideoplayer.constants.GEventMsg;
 import com.gloomyer.gvideoplayer.constants.GPlayState;
@@ -24,6 +25,7 @@ import com.gloomyer.gvideoplayer.interfaces.GVideoScaleListener;
 import com.gloomyer.gvideoplayer.interfaces.IMeidiaPlayer;
 import com.gloomyer.gvideoplayer.playerimpl.AndroidMeidiaPlayerImpl;
 import com.gloomyer.gvideoplayer.utils.GListenerManager;
+import com.gloomyer.gvideoplayer.utils.GPlayRecyclerViewAutoPlayHelper;
 import com.gloomyer.gvideoplayer.utils.GPlayUtils;
 
 import java.io.IOException;
@@ -83,7 +85,7 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
      */
     public void createPlayer(IMeidiaPlayer mMeidiaPlayer) {
         if (mMeidiaPlayer == null) {
-            mMeidiaPlayer = new AndroidMeidiaPlayerImpl();
+            mMeidiaPlayer = new AndroidMeidiaPlayerImpl(getContext());
         }
         this.mMeidiaPlayer = mMeidiaPlayer;
     }
@@ -111,17 +113,17 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
      */
     public void setCover(String cover) {
         this.mCover = cover;
+        mControllerView.setCover(cover);
     }
 
     /**
-     * 设置播放失败图片，暂时只支持资源文件
+     * 获取视频封面加载imageview
      *
-     * @param resId
+     * @return
      */
-    public void setPlayErrorImg(int resId) {
-        this.playErrorImg = resId;
+    public ImageView getCoverIv() {
+        return mControllerView.getCoverIv();
     }
-
 
     /**
      * 设置视频播放地址
@@ -130,10 +132,7 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
      */
     public void setVideoUrl(String videoUrl) {
         this.videoUrl = videoUrl;
-        if (mMeidiaPlayer != null) {
-            mMeidiaPlayer.stop();
-            mMeidiaPlayer = null;
-        }
+        stop();
         if (waitSetDateSource) {
             initMiediaPlayer();
         }
@@ -146,8 +145,10 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
         GEventMsg msg = new GEventMsg();
         msg.what = GEventMsg.WHAT_STOP_PLAY;
         msg.obj = this;
-
         GListenerManager.get().sendEvent(msg);
+        if (GPlayRecyclerViewAutoPlayHelper.get().isBand()) {
+            GPlayRecyclerViewAutoPlayHelper.get().setLastPlayer(this);
+        }
         if (getPlayState() == GPlayState.Idle) {
             if (!TextUtils.isEmpty(videoUrl)) {
                 initMiediaPlayer();
@@ -157,16 +158,18 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
         } else if (getPlayState() == GPlayState.Pause) {
             mMeidiaPlayer.start();
         } else if (getPlayState() == GPlayState.Stop) {
-            mMeidiaPlayer = null;
+            stop();
             if (!TextUtils.isEmpty(videoUrl)) {
                 initMiediaPlayer();
             } else {
                 waitSetDateSource = true;
             }
-        } else if (mPlayUIState == GPlayViewUIState.LIST_ITEM) {
+        } else if (isPlaying()
+                && mPlayUIState == GPlayViewUIState.LIST_ITEM) {
             entryFullScreen();
-        } else {
-            exitFullScreen();
+        } else if (isPlaying()
+                && mPlayUIState == GPlayViewUIState.FULL_SCREEN) {
+            entryFullHorzontal();
         }
     }
 
@@ -175,7 +178,9 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
      * 停止播放
      */
     public void stop() {
-        mMeidiaPlayer.stop();
+        mControllerView.normal();
+        if (mMeidiaPlayer != null)
+            mMeidiaPlayer.stop();
         mMeidiaPlayer = null;
     }
 
@@ -184,6 +189,12 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
      */
     public void pause() {
         mMeidiaPlayer.pause();
+        mControllerView.post(new Runnable() {
+            @Override
+            public void run() {
+                mControllerView.pause();
+            }
+        });
     }
 
     /**
@@ -203,6 +214,7 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
         mPlayUIState = GPlayViewUIState.LIST_ITEM;
         mControllerView.mini();
         mControllerView.setUIState(GPlayViewUIState.LIST_ITEM);
+        mMeidiaPlayer.setMute(true);
     }
 
     /**
@@ -219,8 +231,9 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
                 ViewGroup.LayoutParams.MATCH_PARENT);
         contentView.addView(mContainer, params);
         mPlayUIState = GPlayViewUIState.FULL_SCREEN;
-        mControllerView.topBottomPause();
         mControllerView.setUIState(GPlayViewUIState.FULL_SCREEN);
+        mControllerView.operation();
+        mMeidiaPlayer.setMute(false);
     }
 
     /**
@@ -292,6 +305,7 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
             mMeidiaPlayer.setOnPreparedListener(new GOnPreparedListener() {
                 @Override
                 public void onPreparedFinish() {
+                    mMeidiaPlayer.setMute(true);
                     mControllerView.setVideDuration(mMeidiaPlayer.getDuration());
                     mMeidiaPlayer.setVideoProgressListener(new GVideoProgressListener() {
                         @Override
@@ -299,6 +313,7 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
                             mControllerView.setVideoProgress(progress);
                         }
                     });
+                    if (getPlayState() == GPlayState.Pause) return;//停止了不继续播放了
                     mMeidiaPlayer.start();
                     setVideoScale();
                 }
@@ -441,7 +456,7 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
             if (msg.obj != this) {
                 if (mMeidiaPlayer != null
                         && isPlaying()) {
-                    mMeidiaPlayer.pause();
+                    pause();
                 }
             }
         }

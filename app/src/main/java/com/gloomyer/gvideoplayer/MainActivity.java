@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.bumptech.glide.Glide;
 import com.gloomyer.gvideoplayer.utils.GPlayRecyclerViewAutoPlayHelper;
 import com.gloomyer.gvideoplayer.view.GVideoView;
 
@@ -48,10 +49,14 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(@NonNull final MyHolder holder, int i) {
-//            holder.gvvVideo.setVideoUrl("https://f.us.sinaimg.cn//000s19eRlx07oXbpXFy0010402008Ibi0k010.mp4?label=mp4_ld&template=640x360.28.0&Expires=1541411914&ssig=rVd7J%2Bfw2Z&KID=unistore,video");
             holder.gvvVideo.setTitle("我是一个大标题~");
-            holder.gvvVideo.setVideoUrl("https://f.us.sinaimg.cn//000s19eRlx07oXbpXFy0010402008Ibi0k010.mp4?label=mp4_ld&template=640x360.28.0&Expires=1541415533&ssig=Vw3lmOT4UV&KID=unistore,video");
-//            holder.gvvVideo.setOnClickListener(new View.OnClickListener() {
+//            holder.gvvVideo.setVideoUrl("https://gloomyer.com/1.mp4");
+            //holder.gvvVideo.setVideoUrl("");
+            holder.gvvVideo.setVideoUrl("https://f.us.sinaimg.cn//000s19eRlx07oXbpXFy0010402008Ibi0k010.mp4?label=mp4_ld&template=640x360.28.0&Expires=1541486230&ssig=4P4qYEQr%2FL&KID=unistore,video");
+            Glide.with(MainActivity.this)
+                    .load("https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1541484490117&di=268cc50b945c2c0162e968f4a6ecf545&imgtype=0&src=http%3A%2F%2Fpic4.1010pic.com%2Fpic10%2Fallimg%2F201607%2F3956-160GZT925T9.jpg")
+                    .into(holder.gvvVideo.getCoverIv());
+//  holder.gvvVideo.setOnClickListener(new View.OnClickListener() {
 //                @Override
 //                public void onClick(View v) {
 //                    //holder.gvvVideo.setVideoUrl("https://f.us.sinaimg.cn/003tGg0Wlx07oXp6qtnq0104020010vN0k010.mp4?label=mp4_ld&template=360x448.28.0&Expires=1541403304&ssig=M%2B0paeOPSe&KID=unistore,video");

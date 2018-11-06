@@ -2,10 +2,8 @@ package com.gloomyer.gvideoplayer.utils;
 
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
 
-import com.gloomyer.gvideoplayer.constants.GPlayState;
 import com.gloomyer.gvideoplayer.view.GVideoView;
 
 import java.util.ArrayList;
@@ -36,8 +34,27 @@ public class GPlayRecyclerViewAutoPlayHelper extends RecyclerView.OnScrollListen
     private RecyclerView mRecyclerView;
     private int videoViewId;
     private GVideoView lastPlayView;
+    private boolean isBand;
 
     private GPlayRecyclerViewAutoPlayHelper() {
+    }
+
+    /**
+     * 是否绑定了
+     *
+     * @return
+     */
+    public boolean isBand() {
+        return isBand;
+    }
+
+    /**
+     * 外部调用使用，
+     *
+     * @param videoView
+     */
+    public void setLastPlayer(GVideoView videoView) {
+        lastPlayView = videoView;
     }
 
     /**
@@ -61,6 +78,7 @@ public class GPlayRecyclerViewAutoPlayHelper extends RecyclerView.OnScrollListen
                 onScrollStateChanged(mRecyclerView, RecyclerView.SCROLL_STATE_IDLE);
             }
         });
+        isBand = true;
     }
 
     /**
@@ -71,6 +89,7 @@ public class GPlayRecyclerViewAutoPlayHelper extends RecyclerView.OnScrollListen
         mRecyclerView = null;
         mLayoutManager = null;
         lastPlayView = null;
+        isBand = false;
     }
 
 
@@ -91,8 +110,7 @@ public class GPlayRecyclerViewAutoPlayHelper extends RecyclerView.OnScrollListen
             if (views.size() == 0) {
                 //没有 销毁所有的
                 if (lastPlayView != null) {
-                    lastPlayView.stop();
-                    lastPlayView = null;
+                    lastPlayView.pause();
                 }
                 return;
             }

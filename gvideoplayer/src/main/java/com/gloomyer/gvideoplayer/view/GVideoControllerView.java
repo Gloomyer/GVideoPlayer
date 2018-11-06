@@ -2,6 +2,7 @@ package com.gloomyer.gvideoplayer.view;
 
 import android.content.Context;
 import android.graphics.RectF;
+import android.os.Handler;
 import android.util.AttributeSet;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
@@ -15,7 +16,6 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.gloomyer.gvideoplayer.R;
-import com.gloomyer.gvideoplayer.constants.GPlayState;
 import com.gloomyer.gvideoplayer.constants.GPlayViewUIState;
 import com.gloomyer.gvideoplayer.utils.GPlayUtils;
 
@@ -28,7 +28,6 @@ public class GVideoControllerView extends FrameLayout implements GestureDetector
     private ProgressBar pbVideo;
     private ImageView ivStart;
     private ImageView ivPause;
-    private ImageView ivImage;
     private LinearLayout llLoading;
     private LinearLayout llTop;
     private ImageView ivClose;
@@ -37,12 +36,15 @@ public class GVideoControllerView extends FrameLayout implements GestureDetector
     private TextView tvTotalTime;
     private TextView tvProgressTime;
     private TextView tvTitle;
+    private ImageView ivCover;
     private long videoProgress;
     private long duration;
     private GVideoView videoView;
     private GPlayViewUIState uiState;
     private GestureDetector mGestureDetector;
     private RectF sbRect;
+    private String cover;
+    private Handler mHandler;
 
     public GVideoControllerView(Context context) {
         this(context, null);
@@ -58,12 +60,13 @@ public class GVideoControllerView extends FrameLayout implements GestureDetector
     }
 
     private void init(Context context) {
+        mHandler = new Handler(context.getMainLooper());
         LayoutInflater.from(context).inflate(R.layout.gvideo_controller_view_layout, this, true);
+        ivCover = findViewById(R.id.iv_cover);
         sbVideo = findViewById(R.id.sb_video);
         pbVideo = findViewById(R.id.pb_video);
         ivStart = findViewById(R.id.iv_start);
         ivPause = findViewById(R.id.iv_pause);
-        ivImage = findViewById(R.id.iv_image);
         llLoading = findViewById(R.id.ll_loading);
         llTop = findViewById(R.id.ll_top);
         ivClose = findViewById(R.id.iv_close);
@@ -78,6 +81,13 @@ public class GVideoControllerView extends FrameLayout implements GestureDetector
             public void onClick(View v) {
                 //退出全屏模式
                 videoView.exitFullScreen();
+            }
+        });
+        ivBack.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                videoView.exitFullHorzontal();
+                operation();
             }
         });
         sbVideo.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -101,15 +111,18 @@ public class GVideoControllerView extends FrameLayout implements GestureDetector
             @Override
             public void onClick(View v) {
                 if (uiState == GPlayViewUIState.FULL_SCREEN) {
-                    uiState = GPlayViewUIState.FULL_HORIZONTAL;
-                    ivFull.setImageResource(R.drawable.gvideo_shrink);
                     videoView.entryFullHorzontal();
                 } else {
-                    uiState = GPlayViewUIState.FULL_SCREEN;
-                    ivFull.setImageResource(R.drawable.gvideo_enlarge);
                     videoView.exitFullHorzontal();
-
                 }
+                operation();
+            }
+        });
+        ivPause.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                videoView.pause();
+                operation();
             }
         });
         uiState = GPlayViewUIState.LIST_ITEM;
@@ -204,9 +217,11 @@ public class GVideoControllerView extends FrameLayout implements GestureDetector
      * 正常模式，只展示播放按钮
      */
     public void normal() {
+        pbVideo.setProgress(0);
+        sbVideo.setProgress(0);
+
         pbVideo.setVisibility(GONE);
         sbVideo.setVisibility(GONE);
-        ivImage.setVisibility(GONE);
         llLoading.setVisibility(GONE);
         llTop.setVisibility(GONE);
         tvTotalTime.setVisibility(GONE);
@@ -214,6 +229,25 @@ public class GVideoControllerView extends FrameLayout implements GestureDetector
         ivPause.setVisibility(GONE);
         ivFull.setVisibility(GONE);
 
+        ivStart.setVisibility(VISIBLE);
+        ivCover.setVisibility(VISIBLE);
+    }
+
+    /**
+     * 暂停模式
+     */
+    public void pause() {
+        sbVideo.setVisibility(GONE);
+        llLoading.setVisibility(GONE);
+        llTop.setVisibility(GONE);
+        tvTotalTime.setVisibility(GONE);
+        tvProgressTime.setVisibility(GONE);
+        ivPause.setVisibility(GONE);
+        ivFull.setVisibility(GONE);
+        ivCover.setVisibility(GONE);
+        ivPause.setVisibility(GONE);
+
+        pbVideo.setVisibility(VISIBLE);
         ivStart.setVisibility(VISIBLE);
     }
 
@@ -223,15 +257,16 @@ public class GVideoControllerView extends FrameLayout implements GestureDetector
     public void mini() {
         pbVideo.setVisibility(VISIBLE);
 
+        ivStart.setVisibility(videoView.isPlaying() ? GONE : VISIBLE);
+
         sbVideo.setVisibility(GONE);
-        ivStart.setVisibility(GONE);
-        ivImage.setVisibility(GONE);
         ivFull.setVisibility(GONE);
         llLoading.setVisibility(GONE);
         llTop.setVisibility(GONE);
         tvTotalTime.setVisibility(GONE);
         tvProgressTime.setVisibility(GONE);
         ivPause.setVisibility(GONE);
+        ivCover.setVisibility(GONE);
     }
 
     /**
@@ -244,38 +279,55 @@ public class GVideoControllerView extends FrameLayout implements GestureDetector
         pbVideo.setVisibility(GONE);
         sbVideo.setVisibility(GONE);
         ivStart.setVisibility(GONE);
-        ivImage.setVisibility(GONE);
         llTop.setVisibility(GONE);
         tvTotalTime.setVisibility(GONE);
         tvProgressTime.setVisibility(GONE);
         ivPause.setVisibility(GONE);
+        ivCover.setVisibility(GONE);
     }
 
     /**
      * 包含顶部标题 退出全屏模式 不含其他UI组件
      * 只显示5s 然后进入mini 模式
      */
-    public void topBottomPause() {
+    public void operation() {
+        mHandler.removeCallbacks(entryMini);
+
         pbVideo.setVisibility(GONE);
         ivStart.setVisibility(GONE);
-        ivImage.setVisibility(GONE);
         llLoading.setVisibility(GONE);
-        ivBack.setVisibility(GONE);
+        ivCover.setVisibility(GONE);
+        ivStart.setVisibility(videoView.isPlaying() ? GONE : VISIBLE);
+
+
+        if (uiState == GPlayViewUIState.FULL_SCREEN) {
+            ivClose.setVisibility(VISIBLE);
+            ivBack.setVisibility(GONE);
+            ivFull.setImageResource(R.drawable.gvideo_enlarge);
+        } else {
+            ivBack.setVisibility(VISIBLE);
+            ivClose.setVisibility(GONE);
+            ivFull.setImageResource(R.drawable.gvideo_shrink);
+        }
 
         ivFull.setVisibility(VISIBLE);
         ivPause.setVisibility(VISIBLE);
         llTop.setVisibility(VISIBLE);
-        ivClose.setVisibility(VISIBLE);
         tvTotalTime.setVisibility(VISIBLE);
         tvProgressTime.setVisibility(VISIBLE);
         sbVideo.setVisibility(VISIBLE);
-        postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                mini();
-            }
-        }, 3000);
+        mHandler.postDelayed(entryMini, 3000);
     }
+
+    /**
+     * 进入mini模式 定时器使用
+     */
+    private Runnable entryMini = new Runnable() {
+        @Override
+        public void run() {
+            mini();
+        }
+    };
 
     @Override
     public boolean onDown(MotionEvent e) {
@@ -289,16 +341,11 @@ public class GVideoControllerView extends FrameLayout implements GestureDetector
 
     @Override
     public boolean onSingleTapUp(MotionEvent e) {
-        //点击播放
-        if (videoView.getPlayState() == GPlayState.Idle) {
+        if (uiState == GPlayViewUIState.LIST_ITEM
+                || !videoView.isPlaying()) {
             videoView.start();
-        }
-
-        if (uiState == GPlayViewUIState.LIST_ITEM) {
-            videoView.entryFullScreen();
         } else {
-            topBottomPause();
-
+            operation();
         }
         return true;
     }
@@ -316,5 +363,18 @@ public class GVideoControllerView extends FrameLayout implements GestureDetector
     @Override
     public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
         return false;
+    }
+
+    /**
+     * 设置Cover
+     *
+     * @param cover
+     */
+    public void setCover(String cover) {
+        this.cover = cover;
+    }
+
+    public ImageView getCoverIv() {
+        return ivCover;
     }
 }
