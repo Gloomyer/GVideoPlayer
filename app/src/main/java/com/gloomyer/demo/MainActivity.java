@@ -53,8 +53,8 @@ public class MainActivity extends AppCompatActivity {
             holder.gvvVideo.setTitle("我是一个大标题~");
 //            holder.gvvVideo.setVideoUrl("https://gloomyer.com/1.mp4");
             //holder.gvvVideo.setVideoUrl("");
-            holder.gvvVideo.setVideoUrl("https://f.us.sinaimg.cn//000s19eRlx07oXbpXFy0010402008Ibi0k010.mp4?label=mp4_ld&template=640x360.28.0&Expires=1541486230&ssig=4P4qYEQr%2FL&KID=unistore,video");
-            Glide.with(MainActivity.this)
+            holder.gvvVideo.setVideoUrl("https://f.us.sinaimg.cn//000s19eRlx07oXbpXFy0010402008Ibi0k010.mp4?label=mp4_ld&template=640x360.28.0&Expires=1541493820&ssig=4d0WXs73As&KID=unistore,video");
+                Glide.with(MainActivity.this)
                     .load("https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1541484490117&di=268cc50b945c2c0162e968f4a6ecf545&imgtype=0&src=http%3A%2F%2Fpic4.1010pic.com%2Fpic10%2Fallimg%2F201607%2F3956-160GZT925T9.jpg")
                     .into(holder.gvvVideo.getCoverIv());
 //  holder.gvvVideo.setOnClickListener(new View.OnClickListener() {

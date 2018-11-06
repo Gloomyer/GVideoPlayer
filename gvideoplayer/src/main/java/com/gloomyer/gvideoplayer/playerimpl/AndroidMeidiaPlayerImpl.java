@@ -26,7 +26,7 @@ public class AndroidMeidiaPlayerImpl implements IMeidiaPlayer,
         MediaPlayer.OnCompletionListener,
         Runnable {
 
-    private static int volume = 50;//音量大小 默认100
+    private static float mVolume = IMeidiaPlayer.DEFAULT_VOLUME;//音量大小 默认100
     private MediaPlayer mMediaPlayer;
     private GOnBufferingUpdateListener mOnBufferingUpdateListener;
     private GOnPreparedListener mOnPreparedListener;
@@ -179,16 +179,20 @@ public class AndroidMeidiaPlayerImpl implements IMeidiaPlayer,
         if (mute) {
             mMediaPlayer.setVolume(0, 0);
         } else {
-            mMediaPlayer.setVolume(1, 1);
+            mMediaPlayer.setVolume(getVolume(), getVolume());
         }
         this.mute = mute;
     }
 
-    private float getVolume() {
-        if (mAudioManager != null) {
-            return mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-        }
-        return 0;
+    @Override
+    public float getVolume() {
+        return mVolume;
+    }
+
+    @Override
+    public void setVolume(float volume) {
+        mVolume = volume;
+        mMediaPlayer.setVolume(volume, volume);
     }
 
     @Override

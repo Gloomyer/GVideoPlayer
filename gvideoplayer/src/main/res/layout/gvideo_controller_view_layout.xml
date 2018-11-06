@@ -136,6 +136,68 @@
 
     </LinearLayout>
 
+    <!--声音调节区域-->
+    <LinearLayout
+        android:id="@+id/ll_volume"
+        android:layout_width="40dp"
+        android:layout_height="200dp"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="10dp"
+        android:background="@drawable/gvideo_dialog_progress_bg"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:id="@+id/pb_volume"
+            style="@style/gvideo_vertical_progressBar"
+            android:layout_width="4dp"
+            android:layout_height="0dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
+            android:layout_weight="1"
+            android:max="100" />
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            android:src="@drawable/gvideo_volume_icon" />
+    </LinearLayout>
+
+
+    <RelativeLayout
+        android:id="@+id/rl_video_brightness"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_marginRight="10dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="visible">
+
+        <ImageView
+            android:id="@+id/iv_video_brightness"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_centerHorizontal="true"
+            android:layout_marginRight="15dp"
+            android:src="@drawable/gvideo_brightness_6_white_36dp" />
+
+        <TextView
+            android:id="@+id/tv_video_brightness"
+            android:layout_width="70dp"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/iv_video_brightness"
+            android:gravity="center"
+            android:paddingTop="8dp"
+            android:text="50%"
+            android:textColor="@android:color/white"
+            android:textSize="16dp" />
+    </RelativeLayout>
+
     <!--中间开始播放按钮-->
 
     <ImageView

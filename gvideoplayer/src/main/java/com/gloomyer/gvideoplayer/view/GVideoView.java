@@ -1,5 +1,6 @@
 package com.gloomyer.gvideoplayer.view;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
@@ -10,6 +11,7 @@ import android.util.AttributeSet;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
@@ -215,6 +217,23 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
         mControllerView.mini();
         mControllerView.setUIState(GPlayViewUIState.LIST_ITEM);
         mMeidiaPlayer.setMute(true);
+        setBrightness(.5f);
+    }
+
+    /**
+     * 设置Activity 亮度
+     *
+     * @param brightness
+     */
+    public void setBrightness(float brightness) {
+        WindowManager.LayoutParams lpa = ((Activity) getContext()).getWindow().getAttributes();
+        lpa.screenBrightness = brightness;
+        if (lpa.screenBrightness > 1.0f) {
+            lpa.screenBrightness = 1.0f;
+        } else if (lpa.screenBrightness < 0.01f) {
+            lpa.screenBrightness = 0.01f;
+        }
+        ((Activity) getContext()).getWindow().setAttributes(lpa);
     }
 
     /**
@@ -460,5 +479,36 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
                 }
             }
         }
+    }
+
+    /**
+     * 获取当前音量
+     *
+     * @return
+     */
+    public float getVolume() {
+        return mMeidiaPlayer == null ? IMeidiaPlayer.DEFAULT_VOLUME : mMeidiaPlayer.getVolume();
+    }
+
+    /**
+     * 设置视频播放音量
+     *
+     * @param volume
+     */
+    public void setVolume(float volume) {
+        if (mMeidiaPlayer != null) {
+            mMeidiaPlayer.setVolume(volume);
+        }
+    }
+
+    /**
+     * 获取当前屏幕亮度
+     *
+     * @return
+     */
+    public float getCurrentBrightness() {
+        float value = ((Activity) getContext()).getWindow().getAttributes().screenBrightness;
+        if (value == -1f) value = .5f;
+        return value;
     }
 }

@@ -12,6 +12,8 @@ import java.io.IOException;
  */
 public interface IMeidiaPlayer {
 
+    float DEFAULT_VOLUME = .5f;
+
     /**
      * 异步准备
      */
@@ -156,4 +158,18 @@ public interface IMeidiaPlayer {
      * @return
      */
     boolean isMute();
+
+    /**
+     * 获取当前音量
+     *
+     * @return
+     */
+    float getVolume();
+
+    /**
+     * 设置音量
+     *
+     * @param volume
+     */
+    void setVolume(float volume);
 }
