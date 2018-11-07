@@ -6,6 +6,7 @@ package com.gloomyer.gvideoplayer.constants;
  */
 public class GEventMsg {
     public static final int WHAT_STOP_PLAY = 0x001;
+    public static final int WHAT_DESTORY = 0x002;
     public int what;
     public String content;
     public long arg1;

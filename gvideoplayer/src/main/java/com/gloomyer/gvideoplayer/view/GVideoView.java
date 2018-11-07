@@ -45,8 +45,6 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
     private FrameLayout mContainer;
     private GOnPlayStateChangeListener mOnPlayStateChangeListener;
     private IMeidiaPlayer mMeidiaPlayer; //播放器
-    private String mCover;//预览图地址,暂不支持非网络图片
-    private int playErrorImg;
     private TextureView mTextureView; //视频渲染View
     private GPlayViewUIState mPlayUIState; //当前播放器的UI状态
     private GVideoControllerView mControllerView;
@@ -111,13 +109,6 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
         this.mOnPlayStateChangeListener = mListener;
     }
 
-    /**
-     * 设置预览图
-     */
-    public void setCover(String cover) {
-        this.mCover = cover;
-        mControllerView.setCover(cover);
-    }
 
     /**
      * 获取视频封面加载imageview
@@ -506,6 +497,8 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
                     pause();
                 }
             }
+        } else if (msg.what == GEventMsg.WHAT_DESTORY) {
+            stop();
         }
     }
 

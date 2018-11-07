@@ -4,6 +4,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
+import com.gloomyer.gvideoplayer.constants.GEventMsg;
 import com.gloomyer.gvideoplayer.view.GVideoView;
 
 import java.util.ArrayList;
@@ -89,6 +90,9 @@ public class GPlayRecyclerViewAutoPlayHelper extends RecyclerView.OnScrollListen
      * 解除所有绑定
      */
     public void unBind() {
+        GEventMsg msg = new GEventMsg();
+        msg.what = GEventMsg.WHAT_DESTORY;
+        GListenerManager.get().sendEvent(msg);
         mRecyclerView.removeOnScrollListener(this);
         mRecyclerView = null;
         mLayoutManager = null;
