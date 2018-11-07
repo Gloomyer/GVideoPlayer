@@ -5,10 +5,10 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
 import com.gloomyer.gvideoplayer.GVideoManager;
-import com.gloomyer.gvideoplayer.constants.GEventMsg;
 import com.gloomyer.gvideoplayer.view.GVideoView;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -17,28 +17,36 @@ import java.util.List;
 public class GPlayRecyclerViewAutoPlayHelper extends RecyclerView.OnScrollListener {
 
 
-    private LinearLayoutManager mLayoutManager;
-
-
-    private enum Instance {
-        I;
-        GPlayRecyclerViewAutoPlayHelper instance;
-
-        Instance() {
-            instance = new GPlayRecyclerViewAutoPlayHelper();
-        }
+    public static GPlayRecyclerViewAutoPlayHelper get(String tag) {
+        return new GPlayRecyclerViewAutoPlayHelper(tag);
     }
-
 
     public static GPlayRecyclerViewAutoPlayHelper get() {
-        return Instance.I.instance;
+        return get(GVideoManager.get().getDefaultTAG());
     }
 
-    private RecyclerView mRecyclerView;
-    private int videoViewId;
-    private boolean isBand;
+    private HashMap<String, RecyclerView> mRecyclerViews;
+    private HashMap<String, LinearLayoutManager> mLayoutManagers;
+    private HashMap<String, Integer> videoViewIds;
+    private HashMap<String, Boolean> isBands;
+    private String tag;
 
-    private GPlayRecyclerViewAutoPlayHelper() {
+    private GPlayRecyclerViewAutoPlayHelper(String tag) {
+        mRecyclerViews = new HashMap<>();
+        mLayoutManagers = new HashMap<>();
+        videoViewIds = new HashMap<>();
+        isBands = new HashMap<>();
+        this.tag = tag;
+    }
+
+    /**
+     * 是否绑定了
+     *
+     * @return
+     */
+    public boolean isBand(String tag) {
+        Boolean isBand = isBands.get(tag);
+        return isBand != null && isBand;
     }
 
     /**
@@ -47,7 +55,7 @@ public class GPlayRecyclerViewAutoPlayHelper extends RecyclerView.OnScrollListen
      * @return
      */
     public boolean isBand() {
-        return isBand;
+        return isBand(tag);
     }
 
 
@@ -57,11 +65,12 @@ public class GPlayRecyclerViewAutoPlayHelper extends RecyclerView.OnScrollListen
      * @param mRecyclerView 要绑定的RecycelrView
      * @param videoViewId   GPlayView在holder中的id
      */
-    public void bind(final RecyclerView mRecyclerView, int videoViewId) {
-        this.mRecyclerView = mRecyclerView;
-        this.videoViewId = videoViewId;
+    public void bind(String tag, final RecyclerView mRecyclerView, int videoViewId) {
+        mRecyclerViews.put(tag, mRecyclerView);
+        videoViewIds.put(tag, videoViewId);
         try {
-            mLayoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
+            LinearLayoutManager mLayoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
+            mLayoutManagers.put(tag, mLayoutManager);
         } catch (Exception e) {
             throw new RuntimeException("绑定RecyclerView必须是LinearLayoutManager");
         }
@@ -72,23 +81,47 @@ public class GPlayRecyclerViewAutoPlayHelper extends RecyclerView.OnScrollListen
                 onScrollStateChanged(mRecyclerView, RecyclerView.SCROLL_STATE_IDLE);
             }
         });
-        isBand = true;
+        isBands.put(tag, true);
+    }
+
+    /**
+     * 绑定
+     *
+     * @param mRecyclerView 要绑定的RecycelrView
+     * @param videoViewId   GPlayView在holder中的id
+     */
+    public void bind(RecyclerView mRecyclerView, int videoViewId) {
+        bind(tag, mRecyclerView, videoViewId);
+    }
+
+
+    /**
+     * 解除所有绑定
+     */
+    public void unBind(String tag) {
+        RecyclerView view = mRecyclerViews.get(tag);
+        if (view != null)
+            view.removeOnScrollListener(this);
+        mRecyclerViews.remove(tag);
+        mLayoutManagers.remove(tag);
+        videoViewIds.remove(tag);
+        isBands.remove(tag);
     }
 
     /**
      * 解除所有绑定
      */
     public void unBind() {
-        mRecyclerView.removeOnScrollListener(this);
-        mRecyclerView = null;
-        mLayoutManager = null;
-        isBand = false;
+        unBind(tag);
     }
 
 
     public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
         if (newState == RecyclerView.SCROLL_STATE_IDLE
                 && GPlayUtils.getNetType(recyclerView.getContext()) == 1) { //wifi == 1
+            LinearLayoutManager mLayoutManager = mLayoutManagers.get(tag);
+            Integer videoViewId = videoViewIds.get(tag);
+            if (mLayoutManager == null || videoViewId == null) return;
             int firstPos = mLayoutManager.findFirstVisibleItemPosition();
             int lastPos = mLayoutManager.findLastVisibleItemPosition();
             List<View> views = new ArrayList<>();
@@ -138,7 +171,7 @@ public class GPlayRecyclerViewAutoPlayHelper extends RecyclerView.OnScrollListen
         } else {
             if (GVideoManager.get().getLastPlayerView() != null
                     && GVideoManager.get().isPlaying()) {
-                GVideoManager.get().pause();
+                GVideoManager.get().onPause(tag);
             }
         }
     }

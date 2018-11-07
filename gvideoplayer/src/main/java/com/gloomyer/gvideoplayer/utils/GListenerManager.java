@@ -4,7 +4,10 @@ import com.gloomyer.gvideoplayer.constants.GEventMsg;
 import com.gloomyer.gvideoplayer.interfaces.GListener;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * 监听者模式管理者
@@ -24,19 +27,25 @@ public class GListenerManager {
         return Instance.I.instance;
     }
 
-    private List<GListener> mListeners;
+    private Map<String, List<GListener>> mListeners;
 
     private GListenerManager() {
-        mListeners = new ArrayList<>();
+        mListeners = new HashMap<>();
     }
 
     /**
      * 注册
      *
+     * @param tag
      * @param listener
      */
-    public void register(GListener listener) {
-        mListeners.add(listener);
+    public void register(String tag, GListener listener) {
+        List<GListener> mls = mListeners.get(tag);
+        if (mls == null) {
+            mls = new ArrayList<GListener>();
+            mListeners.put(tag, mls);
+        }
+        mls.add(listener);
     }
 
     /**
@@ -44,8 +53,27 @@ public class GListenerManager {
      *
      * @param listener
      */
-    public void unRegister(GListener listener) {
-        mListeners.remove(listener);
+    public void unRegister(String tag, GListener listener) {
+        List<GListener> mls = mListeners.get(tag);
+        if (mls == null) {
+            return;
+        }
+        mls.remove(listener);
+        if (mls.size() == 0)
+            mListeners.remove(tag);
+    }
+
+    /**
+     * 发送消息 唤起监听
+     *
+     * @param msg
+     */
+    public void sendEvent(String tag, GEventMsg msg) {
+        List<GListener> mls = mListeners.get(tag);
+        if (mls == null || mls.size() <= 0) return;
+        for (GListener mListener : mls) {
+            mListener.onEvent(msg);
+        }
     }
 
     /**
@@ -54,7 +82,17 @@ public class GListenerManager {
      * @param msg
      */
     public void sendEvent(GEventMsg msg) {
-        for (GListener mListener : mListeners) {
+        Set<String> keys = mListeners.keySet();
+        List<GListener> mls = new ArrayList<>();
+        for (String key : keys) {
+            List<GListener> sMls = mListeners.get(key);
+            if (sMls != null && sMls.size() > 0) {
+                for (GListener ml : sMls) {
+                    mls.add(ml);
+                }
+            }
+        }
+        for (GListener mListener : mls) {
             mListener.onEvent(msg);
         }
     }

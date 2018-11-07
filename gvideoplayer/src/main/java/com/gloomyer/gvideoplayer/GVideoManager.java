@@ -12,11 +12,15 @@ import com.gloomyer.gvideoplayer.utils.GListenerManager;
 import com.gloomyer.gvideoplayer.utils.GPlayRecyclerViewAutoPlayHelper;
 import com.gloomyer.gvideoplayer.view.GVideoView;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * 核心管理器
  */
 public class GVideoManager {
 
+    private static final String DEFAULT_TAG = "defaultTag";
 
     private enum Instance {
         I;
@@ -31,12 +35,13 @@ public class GVideoManager {
         return Instance.I.manager;
     }
 
-    private GVideoView lastPlayerView;
-    private boolean isMyPause;
+    private Map<String, GVideoView> cacheViews;
+    private Map<String, Boolean> cacheMyPauses;
     private GCreateVideoPlayerListener mCreateVideoPlayerListener;
 
     private GVideoManager() {
-        isMyPause = false;
+        cacheViews = new HashMap<>();
+        cacheMyPauses = new HashMap<>();
     }
 
     /**
@@ -51,11 +56,33 @@ public class GVideoManager {
     /**
      * 被暂停
      */
+    public void onPause(String tag) {
+        GVideoView view = cacheViews.get(tag);
+        if (view != null
+                && view.isPlaying()) {
+            view.pause();
+            cacheMyPauses.put(tag, true);
+        }
+    }
+
+    /**
+     * 被暂停
+     */
     public void onPause() {
-        if (lastPlayerView != null
-                && lastPlayerView.isPlaying()) {
-            isMyPause = true;
-            lastPlayerView.pause();
+        onPause(DEFAULT_TAG);
+    }
+
+    /**
+     * @param tag
+     */
+    public void onResume(String tag) {
+        GVideoView view = cacheViews.get(tag);
+        Boolean myPause = cacheMyPauses.get(tag);
+        if (view != null
+                && myPause != null
+                && myPause) {
+            cacheMyPauses.put(tag, false);
+            view.start();
         }
     }
 
@@ -63,11 +90,7 @@ public class GVideoManager {
      * 被恢复
      */
     public void onResume() {
-        if (lastPlayerView != null
-                && isMyPause) {
-            isMyPause = false;
-            lastPlayerView.start();
-        }
+        onResume(DEFAULT_TAG);
     }
 
     /**
@@ -79,6 +102,19 @@ public class GVideoManager {
         msg.what = GEventMsg.WHAT_DESTORY;
         GListenerManager.get().sendEvent(msg);
         GPlayRecyclerViewAutoPlayHelper.get().unBind();
+        cacheMyPauses.clear();
+        cacheViews.clear();
+        cacheMyPauses = null;
+        cacheViews = null;
+    }
+
+    /**
+     * 设置当前播放的view
+     *
+     * @param playerView
+     */
+    public void setLastPlayer(String tag, GVideoView playerView) {
+        cacheViews.put(tag, playerView);
     }
 
     /**
@@ -87,7 +123,16 @@ public class GVideoManager {
      * @param playerView
      */
     public void setLastPlayer(GVideoView playerView) {
-        this.lastPlayerView = playerView;
+        setLastPlayer(DEFAULT_TAG, playerView);
+    }
+
+    /**
+     * 获取上一次播放的View
+     *
+     * @return
+     */
+    public GVideoView getLastPlayerView(String tag) {
+        return cacheViews.get(tag);
     }
 
     /**
@@ -96,7 +141,7 @@ public class GVideoManager {
      * @return
      */
     public GVideoView getLastPlayerView() {
-        return lastPlayerView;
+        return getLastPlayerView(DEFAULT_TAG);
     }
 
     /**
@@ -105,17 +150,17 @@ public class GVideoManager {
      * @return
      */
     public boolean isPlaying() {
-        return lastPlayerView != null && lastPlayerView.isPlaying();
+        return isPlaying(DEFAULT_TAG);
     }
 
     /**
-     * 暂停当前播放的
+     * 是否正在播放视频
+     *
+     * @return
      */
-    public void pause() {
-        if (lastPlayerView != null
-                && lastPlayerView.isPlaying()) {
-            lastPlayerView.pause();
-        }
+    public boolean isPlaying(String tag) {
+        GVideoView view = cacheViews.get(tag);
+        return view != null && view.isPlaying();
     }
 
     /**
@@ -136,18 +181,36 @@ public class GVideoManager {
      *
      * @param activity
      */
-    public void onBackPressed(Activity activity) {
+    public void onBackPressed(String tag, Activity activity) {
+        GVideoView view = cacheViews.get(tag);
         if (isPlaying()) {
-            if (lastPlayerView.getPlayUIState() == GPlayViewUIState.LIST_ITEM) {
+            if (view.getPlayUIState() == GPlayViewUIState.LIST_ITEM) {
                 activity.onBackPressed();
-            } else if (lastPlayerView.getPlayUIState() == GPlayViewUIState.FULL_SCREEN) {
-                lastPlayerView.exitFullScreen();
-            } else if (lastPlayerView.getPlayUIState() == GPlayViewUIState.FULL_HORIZONTAL) {
-                lastPlayerView.exitFullHorzontal();
+            } else if (view.getPlayUIState() == GPlayViewUIState.FULL_SCREEN) {
+                view.exitFullScreen();
+            } else if (view.getPlayUIState() == GPlayViewUIState.FULL_HORIZONTAL) {
+                view.exitFullHorzontal();
             }
         } else {
             activity.onBackPressed();
         }
     }
 
+    /**
+     * 返回键
+     *
+     * @param activity
+     */
+    public void onBackPressed(Activity activity) {
+        onBackPressed(DEFAULT_TAG, activity);
+    }
+
+    /**
+     * 获取默认TAG
+     *
+     * @return
+     */
+    public String getDefaultTAG() {
+        return DEFAULT_TAG;
+    }
 }

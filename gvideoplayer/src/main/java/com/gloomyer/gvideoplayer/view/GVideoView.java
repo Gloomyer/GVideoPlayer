@@ -27,7 +27,6 @@ import com.gloomyer.gvideoplayer.interfaces.GPlayStateChangeListener;
 import com.gloomyer.gvideoplayer.interfaces.GVideoProgressListener;
 import com.gloomyer.gvideoplayer.interfaces.GVideoScaleListener;
 import com.gloomyer.gvideoplayer.interfaces.IMeidiaPlayer;
-import com.gloomyer.gvideoplayer.playerimpl.AndroidMeidiaPlayerImpl;
 import com.gloomyer.gvideoplayer.utils.GListenerManager;
 import com.gloomyer.gvideoplayer.utils.GPlayRecyclerViewAutoPlayHelper;
 import com.gloomyer.gvideoplayer.utils.GPlayUtils;
@@ -52,6 +51,7 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
     private GVideoScaleListener mVideoScaleListener;
     private String videoUrl;
     private boolean waitSetDateSource;
+    private String tag;//tag标记
 
     public GVideoView(Context context) {
         this(context, null);
@@ -77,7 +77,17 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
         setUIState(GPlayViewUIState.LIST_ITEM);
         mTextureView.setSurfaceTextureListener(this);
         waitSetDateSource = false;
-        GListenerManager.get().register(this);
+        tag = GVideoManager.get().getDefaultTAG();
+    }
+
+    /**
+     * 设置标记tag
+     *
+     * @param tag
+     */
+    public void setTAG(String tag) {
+        this.tag = tag;
+        GListenerManager.get().register(tag, this);
     }
 
     /**
@@ -148,7 +158,7 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
         GEventMsg msg = new GEventMsg();
         msg.what = GEventMsg.WHAT_STOP_PLAY;
         msg.obj = this;
-        GListenerManager.get().sendEvent(msg);
+        GListenerManager.get().sendEvent(tag, msg);
         if (GPlayRecyclerViewAutoPlayHelper.get().isBand()) {
         }
         GVideoManager.get().setLastPlayer(this);
@@ -497,7 +507,7 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
             }
         } else if (msg.what == GEventMsg.WHAT_DESTORY) {
             stop();
-            GListenerManager.get().unRegister(this);
+            GListenerManager.get().unRegister(tag, this);
         }
     }
 
