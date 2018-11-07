@@ -34,6 +34,7 @@ public class GVideoControllerView extends FrameLayout implements GestureDetector
     private LinearLayout llLoading;
     private LinearLayout llTop;
     private LinearLayout llVolume;
+    private LinearLayout llError;
     private RelativeLayout rlVideoBrightness;
     private RelativeLayout rlVideoPosition;
     private ImageView ivClose;
@@ -96,10 +97,12 @@ public class GVideoControllerView extends FrameLayout implements GestureDetector
         rlVideoPosition = findViewById(R.id.rl_video_position);
         tvCurrent = findViewById(R.id.tv_current);
         tvDuration = findViewById(R.id.tv_duration);
+        llError = findViewById(R.id.ll_error);
 
         llVolume.setVisibility(GONE);
         rlVideoBrightness.setVisibility(GONE);
         rlVideoPosition.setVisibility(GONE);
+        llError.setVisibility(GONE);
         ivClose.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -236,6 +239,7 @@ public class GVideoControllerView extends FrameLayout implements GestureDetector
         tvProgressTime.setVisibility(GONE);
         ivPause.setVisibility(GONE);
         ivFull.setVisibility(GONE);
+        llError.setVisibility(GONE);
 
         ivStart.setVisibility(VISIBLE);
         ivCover.setVisibility(VISIBLE);
@@ -254,6 +258,7 @@ public class GVideoControllerView extends FrameLayout implements GestureDetector
         ivFull.setVisibility(GONE);
         ivCover.setVisibility(GONE);
         ivPause.setVisibility(GONE);
+        llError.setVisibility(GONE);
 
         pbVideo.setVisibility(VISIBLE);
         ivStart.setVisibility(VISIBLE);
@@ -268,6 +273,7 @@ public class GVideoControllerView extends FrameLayout implements GestureDetector
         ivStart.setVisibility(videoView.isPlaying() ? GONE : VISIBLE);
 
         sbVideo.setVisibility(GONE);
+        llError.setVisibility(GONE);
         ivFull.setVisibility(GONE);
         llLoading.setVisibility(GONE);
         llTop.setVisibility(GONE);
@@ -284,6 +290,7 @@ public class GVideoControllerView extends FrameLayout implements GestureDetector
         llLoading.setVisibility(VISIBLE);
 
         ivFull.setVisibility(GONE);
+        llError.setVisibility(GONE);
         pbVideo.setVisibility(GONE);
         sbVideo.setVisibility(GONE);
         ivStart.setVisibility(GONE);
@@ -303,6 +310,7 @@ public class GVideoControllerView extends FrameLayout implements GestureDetector
 
         pbVideo.setVisibility(GONE);
         ivStart.setVisibility(GONE);
+        llError.setVisibility(GONE);
         llLoading.setVisibility(GONE);
         ivCover.setVisibility(GONE);
         ivStart.setVisibility(videoView.isPlaying() ? GONE : VISIBLE);
@@ -325,6 +333,24 @@ public class GVideoControllerView extends FrameLayout implements GestureDetector
         tvProgressTime.setVisibility(VISIBLE);
         sbVideo.setVisibility(VISIBLE);
         mHandler.postDelayed(entryMini, 3000);
+    }
+
+    /**
+     * 播放失败 提示Ui
+     */
+    public void error() {
+        llError.setVisibility(VISIBLE);
+
+        llLoading.setVisibility(GONE);
+        ivFull.setVisibility(GONE);
+        pbVideo.setVisibility(GONE);
+        sbVideo.setVisibility(GONE);
+        ivStart.setVisibility(GONE);
+        llTop.setVisibility(GONE);
+        tvTotalTime.setVisibility(GONE);
+        tvProgressTime.setVisibility(GONE);
+        ivPause.setVisibility(GONE);
+        ivCover.setVisibility(GONE);
     }
 
     /**
@@ -505,4 +531,6 @@ public class GVideoControllerView extends FrameLayout implements GestureDetector
     public ImageView getCoverIv() {
         return ivCover;
     }
+
+
 }

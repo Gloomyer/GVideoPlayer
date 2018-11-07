@@ -128,7 +128,7 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
         this.videoUrl = videoUrl;
         stop();
         if (waitSetDateSource) {
-            initMiediaPlayer();
+            initMediaPlayer();
         }
     }
 
@@ -165,7 +165,7 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
         }
         if (getPlayState() == GPlayState.Idle) {
             if (!TextUtils.isEmpty(videoUrl)) {
-                initMiediaPlayer();
+                initMediaPlayer();
             } else {
                 waitSetDateSource = true;
             }
@@ -174,7 +174,7 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
         } else if (getPlayState() == GPlayState.Stop) {
             stop();
             if (!TextUtils.isEmpty(videoUrl)) {
-                initMiediaPlayer();
+                initMediaPlayer();
             } else {
                 waitSetDateSource = true;
             }
@@ -184,6 +184,8 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
         } else if (isPlaying()
                 && mPlayUIState == GPlayViewUIState.FULL_SCREEN) {
             entryFullHorzontal();
+        } else if (getPlayState() == GPlayState.Error) {
+            start(true);
         }
     }
 
@@ -321,7 +323,7 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
     /**
      * 初始化创建播放器
      */
-    private void initMiediaPlayer() {
+    private void initMediaPlayer() {
         waitSetDateSource = false;
         if (mMeidiaPlayer == null) {
             createPlayer(null);
@@ -335,7 +337,14 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
                     }
                     if (state == GPlayState.Prepareing) {
                         mControllerView.prepare();
-                    } else {
+                    } else if (state == GPlayState.Error) {
+                        mControllerView.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                mControllerView.error();
+                            }
+                        });
+                    } else if (state == GPlayState.Playing) {
                         mControllerView.mini();
                     }
                 }
@@ -499,6 +508,7 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
             }
         } else if (msg.what == GEventMsg.WHAT_DESTORY) {
             stop();
+            GListenerManager.get().unRegister(this);
         }
     }
 

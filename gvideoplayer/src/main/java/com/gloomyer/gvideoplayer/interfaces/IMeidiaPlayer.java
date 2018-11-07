@@ -172,4 +172,11 @@ public interface IMeidiaPlayer {
      * @param volume
      */
     void setVolume(float volume);
+
+    /**
+     * 设置播放错误回掉
+     *
+     * @param mListener
+     */
+    void setOnErrorListener(GOnErrorListener mListener);
 }

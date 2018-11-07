@@ -4,12 +4,12 @@ import android.content.Context;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Handler;
-import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 
 import com.gloomyer.gvideoplayer.constants.GPlayState;
 import com.gloomyer.gvideoplayer.interfaces.GOnBufferingUpdateListener;
+import com.gloomyer.gvideoplayer.interfaces.GOnErrorListener;
 import com.gloomyer.gvideoplayer.interfaces.GOnPreparedListener;
 import com.gloomyer.gvideoplayer.interfaces.GPlayCompletionListener;
 import com.gloomyer.gvideoplayer.interfaces.GPlayStateChangeListener;
@@ -25,7 +25,8 @@ public class AndroidMeidiaPlayerImpl implements IMeidiaPlayer,
         MediaPlayer.OnBufferingUpdateListener,
         MediaPlayer.OnPreparedListener,
         MediaPlayer.OnCompletionListener,
-        Runnable {
+        Runnable,
+        MediaPlayer.OnErrorListener {
 
     private static float mVolume = IMeidiaPlayer.DEFAULT_VOLUME;//音量大小 默认100
     private MediaPlayer mMediaPlayer;
@@ -40,6 +41,7 @@ public class AndroidMeidiaPlayerImpl implements IMeidiaPlayer,
     private Handler mHandler;
     private boolean mute;
     private AudioManager mAudioManager;
+    private GOnErrorListener mOnErrorListener;
 
     public AndroidMeidiaPlayerImpl(Context context) {
         mMediaPlayer = new MediaPlayer();
@@ -47,6 +49,7 @@ public class AndroidMeidiaPlayerImpl implements IMeidiaPlayer,
         mMediaPlayer.setOnPreparedListener(this);
         mMediaPlayer.setOnCompletionListener(this);
         mMediaPlayer.setLooping(true);
+        mMediaPlayer.setOnErrorListener(this);
         mPlayState = GPlayState.Idle;
         initAudioManager(context);
     }
@@ -79,7 +82,18 @@ public class AndroidMeidiaPlayerImpl implements IMeidiaPlayer,
 
     @Override
     public void stop() {
+        mMediaPlayer.setDisplay(null);
         mMediaPlayer.stop();
+        mOnBufferingUpdateListener = null;
+        mOnErrorListener = null;
+        mOnPreparedListener = null;
+        mMediaPlayer = null;
+        mAudioManager = null;
+        mPlayCompletionListener = null;
+        mPlayStateChangeListener = null;
+        mVideoProgressListener = null;
+        progressThreadIsRun = false;
+        mHandler = null;
         setPlayState(GPlayState.Stop);
     }
 
@@ -197,6 +211,11 @@ public class AndroidMeidiaPlayerImpl implements IMeidiaPlayer,
     }
 
     @Override
+    public void setOnErrorListener(GOnErrorListener mListener) {
+        this.mOnErrorListener = mListener;
+    }
+
+    @Override
     public boolean isMute() {
         return mute;
     }
@@ -255,5 +274,14 @@ public class AndroidMeidiaPlayerImpl implements IMeidiaPlayer,
             }
         }
         progressThreadIsRun = false;
+    }
+
+    @Override
+    public boolean onError(MediaPlayer mp, int what, int extra) {
+        if (mOnErrorListener != null) {
+            mOnErrorListener.onError(what, extra, 0);
+        }
+        setPlayState(GPlayState.Error);
+        return false;
     }
 }
