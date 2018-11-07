@@ -2,6 +2,7 @@ package com.gloomyer.gvideoplayer.view;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.graphics.Matrix;
@@ -141,9 +142,29 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
     }
 
     /**
-     * 开始播放
+     * 播放视频
+     *
+     * @param isPlay 根据网络状态选择是否直接播放
      */
-    public void start() {
+    public void start(boolean isPlay) {
+        if (!isPlay
+                && getPlayState() == GPlayState.Idle) {
+            //闲置状态非wifi播放
+            GPlayUtils.showPlayHintDialog(getContext(),
+                    new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            start(true);
+                        }
+                    },
+                    new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            //nothing...
+                        }
+                    });
+            return;
+        }
         GEventMsg msg = new GEventMsg();
         msg.what = GEventMsg.WHAT_STOP_PLAY;
         msg.obj = this;
@@ -173,6 +194,13 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
                 && mPlayUIState == GPlayViewUIState.FULL_SCREEN) {
             entryFullHorzontal();
         }
+    }
+
+    /**
+     * 开始播放
+     */
+    public void start() {
+        start(GPlayUtils.getNetType(getContext()) == 1);
     }
 
 

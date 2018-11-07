@@ -57,13 +57,6 @@ public class MainActivity extends AppCompatActivity {
             Glide.with(MainActivity.this)
                     .load("https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1541484490117&di=268cc50b945c2c0162e968f4a6ecf545&imgtype=0&src=http%3A%2F%2Fpic4.1010pic.com%2Fpic10%2Fallimg%2F201607%2F3956-160GZT925T9.jpg")
                     .into(holder.gvvVideo.getCoverIv());
-//  holder.gvvVideo.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    //holder.gvvVideo.setVideoUrl("https://f.us.sinaimg.cn/003tGg0Wlx07oXp6qtnq0104020010vN0k010.mp4?label=mp4_ld&template=360x448.28.0&Expires=1541403304&ssig=M%2B0paeOPSe&KID=unistore,video");
-////                    holder.gvvVideo.setVideoUrl("https://gloomyer.com/1.mp4");
-//                    holder.gvvVideo.start();
-//                }
 //            });
         }
 
@@ -71,5 +64,23 @@ public class MainActivity extends AppCompatActivity {
         public int getItemCount() {
             return 100;
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        GPlayRecyclerViewAutoPlayHelper.get().unBind();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        GPlayRecyclerViewAutoPlayHelper.get().onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        GPlayRecyclerViewAutoPlayHelper.get().onResume();
     }
 }

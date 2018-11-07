@@ -4,6 +4,7 @@ import android.content.Context;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Handler;
+import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 
@@ -235,7 +236,6 @@ public class AndroidMeidiaPlayerImpl implements IMeidiaPlayer,
     @Override
     public void run() {
         while (progressThreadIsRun) {
-
             if (mMediaPlayer.getCurrentPosition() != lastProgress
                     && getPlayState() != GPlayState.Idle)
                 mHandler.post(new Runnable() {

@@ -17,6 +17,7 @@ public class GPlayRecyclerViewAutoPlayHelper extends RecyclerView.OnScrollListen
 
     private LinearLayoutManager mLayoutManager;
 
+
     private enum Instance {
         I;
         GPlayRecyclerViewAutoPlayHelper instance;
@@ -35,8 +36,11 @@ public class GPlayRecyclerViewAutoPlayHelper extends RecyclerView.OnScrollListen
     private int videoViewId;
     private GVideoView lastPlayView;
     private boolean isBand;
+    private boolean isMyPause;
+
 
     private GPlayRecyclerViewAutoPlayHelper() {
+        isMyPause = false;
     }
 
     /**
@@ -93,8 +97,32 @@ public class GPlayRecyclerViewAutoPlayHelper extends RecyclerView.OnScrollListen
     }
 
 
+    /**
+     * 被暂停
+     */
+    public void onPause() {
+        if (lastPlayView != null
+                && lastPlayView.isPlaying()) {
+            isMyPause = true;
+            lastPlayView.pause();
+        }
+    }
+
+    /**
+     * 被恢复
+     */
+    public void onResume() {
+        if (lastPlayView != null
+                && isMyPause) {
+            isMyPause = false;
+            lastPlayView.start();
+        }
+    }
+
+
     public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-        if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+        if (newState == RecyclerView.SCROLL_STATE_IDLE
+                && GPlayUtils.getNetType(recyclerView.getContext()) == 1) { //wifi == 1
             int firstPos = mLayoutManager.findFirstVisibleItemPosition();
             int lastPos = mLayoutManager.findLastVisibleItemPosition();
             List<View> views = new ArrayList<>();
@@ -159,5 +187,6 @@ public class GPlayRecyclerViewAutoPlayHelper extends RecyclerView.OnScrollListen
 
     public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
     }
+
 
 }
