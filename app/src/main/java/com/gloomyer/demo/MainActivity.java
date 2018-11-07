@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 
 import com.bumptech.glide.Glide;
 import com.gloomyer.demo.R;
+import com.gloomyer.gvideoplayer.GVideoManager;
 import com.gloomyer.gvideoplayer.utils.GPlayRecyclerViewAutoPlayHelper;
 import com.gloomyer.gvideoplayer.view.GVideoView;
 
@@ -69,18 +70,18 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        GPlayRecyclerViewAutoPlayHelper.get().unBind();
+        GVideoManager.get().onDestory();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        GPlayRecyclerViewAutoPlayHelper.get().onPause();
+        GVideoManager.get().onPause();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        GPlayRecyclerViewAutoPlayHelper.get().onResume();
+        GVideoManager.get().onResume();
     }
 }

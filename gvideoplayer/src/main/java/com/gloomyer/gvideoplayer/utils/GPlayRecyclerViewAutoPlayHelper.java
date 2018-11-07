@@ -4,6 +4,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
+import com.gloomyer.gvideoplayer.GVideoManager;
 import com.gloomyer.gvideoplayer.constants.GEventMsg;
 import com.gloomyer.gvideoplayer.view.GVideoView;
 
@@ -35,13 +36,9 @@ public class GPlayRecyclerViewAutoPlayHelper extends RecyclerView.OnScrollListen
 
     private RecyclerView mRecyclerView;
     private int videoViewId;
-    private GVideoView lastPlayView;
     private boolean isBand;
-    private boolean isMyPause;
-
 
     private GPlayRecyclerViewAutoPlayHelper() {
-        isMyPause = false;
     }
 
     /**
@@ -53,14 +50,6 @@ public class GPlayRecyclerViewAutoPlayHelper extends RecyclerView.OnScrollListen
         return isBand;
     }
 
-    /**
-     * 外部调用使用，
-     *
-     * @param videoView
-     */
-    public void setLastPlayer(GVideoView videoView) {
-        lastPlayView = videoView;
-    }
 
     /**
      * 绑定
@@ -90,37 +79,10 @@ public class GPlayRecyclerViewAutoPlayHelper extends RecyclerView.OnScrollListen
      * 解除所有绑定
      */
     public void unBind() {
-        GEventMsg msg = new GEventMsg();
-        msg.what = GEventMsg.WHAT_DESTORY;
-        GListenerManager.get().sendEvent(msg);
         mRecyclerView.removeOnScrollListener(this);
         mRecyclerView = null;
         mLayoutManager = null;
-        lastPlayView = null;
         isBand = false;
-    }
-
-
-    /**
-     * 被暂停
-     */
-    public void onPause() {
-        if (lastPlayView != null
-                && lastPlayView.isPlaying()) {
-            isMyPause = true;
-            lastPlayView.pause();
-        }
-    }
-
-    /**
-     * 被恢复
-     */
-    public void onResume() {
-        if (lastPlayView != null
-                && isMyPause) {
-            isMyPause = false;
-            lastPlayView.start();
-        }
     }
 
 
@@ -141,8 +103,8 @@ public class GPlayRecyclerViewAutoPlayHelper extends RecyclerView.OnScrollListen
 
             if (views.size() == 0) {
                 //没有 销毁所有的
-                if (lastPlayView != null) {
-                    lastPlayView.pause();
+                if (GVideoManager.get().getLastPlayerView() != null) {
+                    GVideoManager.get().getLastPlayerView().pause();
                 }
                 return;
             }
@@ -173,18 +135,10 @@ public class GPlayRecyclerViewAutoPlayHelper extends RecyclerView.OnScrollListen
                 readyPlayView.start();
             }
 
-            if (readyPlayView != lastPlayView
-                    && lastPlayView != null) {
-                //彻底销毁上一次的
-                //lastPlayView.stop();
-                //lastPlayView = null;
-            }
-
-            lastPlayView = readyPlayView;
         } else {
-            if (lastPlayView != null
-                    && lastPlayView.isPlaying()) {
-                lastPlayView.pause();
+            if (GVideoManager.get().getLastPlayerView() != null
+                    && GVideoManager.get().isPlaying()) {
+                GVideoManager.get().pause();
             }
         }
     }

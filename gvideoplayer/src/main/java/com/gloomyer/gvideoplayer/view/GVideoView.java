@@ -16,6 +16,7 @@ import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
+import com.gloomyer.gvideoplayer.GVideoManager;
 import com.gloomyer.gvideoplayer.constants.GEventMsg;
 import com.gloomyer.gvideoplayer.constants.GPlayState;
 import com.gloomyer.gvideoplayer.constants.GPlayViewUIState;
@@ -80,18 +81,6 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
     }
 
     /**
-     * 设置播放器，如果为空将使用默认的AndroidMediaPlayerImpl
-     *
-     * @param mMeidiaPlayer 可以为空
-     */
-    public void createPlayer(IMeidiaPlayer mMeidiaPlayer) {
-        if (mMeidiaPlayer == null) {
-            mMeidiaPlayer = new AndroidMeidiaPlayerImpl(getContext());
-        }
-        this.mMeidiaPlayer = mMeidiaPlayer;
-    }
-
-    /**
      * 设置标题
      *
      * @param title
@@ -128,7 +117,7 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
         this.videoUrl = videoUrl;
         stop();
         if (waitSetDateSource) {
-            initMediaPlayer();
+            createMediaPlayer();
         }
     }
 
@@ -161,11 +150,11 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
         msg.obj = this;
         GListenerManager.get().sendEvent(msg);
         if (GPlayRecyclerViewAutoPlayHelper.get().isBand()) {
-            GPlayRecyclerViewAutoPlayHelper.get().setLastPlayer(this);
         }
+        GVideoManager.get().setLastPlayer(this);
         if (getPlayState() == GPlayState.Idle) {
             if (!TextUtils.isEmpty(videoUrl)) {
-                initMediaPlayer();
+                createMediaPlayer();
             } else {
                 waitSetDateSource = true;
             }
@@ -174,7 +163,7 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
         } else if (getPlayState() == GPlayState.Stop) {
             stop();
             if (!TextUtils.isEmpty(videoUrl)) {
-                initMediaPlayer();
+                createMediaPlayer();
             } else {
                 waitSetDateSource = true;
             }
@@ -323,12 +312,11 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
     /**
      * 初始化创建播放器
      */
-    private void initMediaPlayer() {
+    private void createMediaPlayer() {
         waitSetDateSource = false;
-        if (mMeidiaPlayer == null) {
-            createPlayer(null);
-        }
+
         try {
+            mMeidiaPlayer = GVideoManager.get().creatMediaPlayer(getContext());
             mMeidiaPlayer.setPlayStateChangeListener(new GPlayStateChangeListener() {
                 @Override
                 public void onPlayStateChange(GPlayState state) {
