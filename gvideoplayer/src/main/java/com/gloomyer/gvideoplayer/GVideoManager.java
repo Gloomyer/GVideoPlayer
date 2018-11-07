@@ -1,8 +1,10 @@
 package com.gloomyer.gvideoplayer;
 
+import android.app.Activity;
 import android.content.Context;
 
 import com.gloomyer.gvideoplayer.constants.GEventMsg;
+import com.gloomyer.gvideoplayer.constants.GPlayViewUIState;
 import com.gloomyer.gvideoplayer.interfaces.GCreateVideoPlayerListener;
 import com.gloomyer.gvideoplayer.interfaces.IMeidiaPlayer;
 import com.gloomyer.gvideoplayer.playerimpl.AndroidMeidiaPlayerImpl;
@@ -127,6 +129,25 @@ public class GVideoManager {
             return mCreateVideoPlayerListener.create(context);
         else
             return new AndroidMeidiaPlayerImpl(context);
+    }
+
+    /**
+     * 返回键
+     *
+     * @param activity
+     */
+    public void onBackPressed(Activity activity) {
+        if (isPlaying()) {
+            if (lastPlayerView.getPlayUIState() == GPlayViewUIState.LIST_ITEM) {
+                activity.onBackPressed();
+            } else if (lastPlayerView.getPlayUIState() == GPlayViewUIState.FULL_SCREEN) {
+                lastPlayerView.exitFullScreen();
+            } else if (lastPlayerView.getPlayUIState() == GPlayViewUIState.FULL_HORIZONTAL) {
+                lastPlayerView.exitFullHorzontal();
+            }
+        } else {
+            activity.onBackPressed();
+        }
     }
 
 }

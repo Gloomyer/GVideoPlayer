@@ -218,6 +218,7 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
         contentView.removeView(mContainer);
 
         GPlayUtils.showActionBar(getContext());
+        GPlayUtils.showNavigation(getContext());
 
         LayoutParams params = new LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -252,6 +253,7 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
     public void entryFullScreen() {
         removeView(mContainer);
         GPlayUtils.hideActionBar(getContext());
+        GPlayUtils.hideNavigation(getContext());
         ViewGroup contentView = GPlayUtils.scanForActivity(getContext())
                 .findViewById(android.R.id.content);
         contentView.setBackgroundColor(Color.BLACK);
@@ -314,7 +316,6 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
      */
     private void createMediaPlayer() {
         waitSetDateSource = false;
-
         try {
             mMeidiaPlayer = GVideoManager.get().creatMediaPlayer(getContext());
             mMeidiaPlayer.setPlayStateChangeListener(new GPlayStateChangeListener() {
@@ -529,5 +530,14 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
         float value = ((Activity) getContext()).getWindow().getAttributes().screenBrightness;
         if (value == -1f) value = .5f;
         return value;
+    }
+
+    /**
+     * 获取UI状态
+     *
+     * @return
+     */
+    public GPlayViewUIState getPlayUIState() {
+        return mPlayUIState;
     }
 }
