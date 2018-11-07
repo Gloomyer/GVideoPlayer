@@ -12,9 +12,6 @@
 - wifi自动播放流量提示播放
 - 播放失败提示
 
-## TODO
-- GPlayRecyclerViewAutoPlayHelper 和GVideoPlayer 耦合太高，解耦
-
 ## 使用
 
 ### 权限
@@ -25,6 +22,7 @@
 <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 ```
 
+### 配置
 Acitivity需要配置:
 ```
 android:configChanges="orientation|keyboardHidden|screenSize"
