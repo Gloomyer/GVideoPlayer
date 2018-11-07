@@ -1,6 +1,5 @@
 package com.gloomyer.gvideoplayer.view;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.RectF;
 import android.os.Handler;
@@ -10,7 +9,6 @@ import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -37,6 +35,7 @@ public class GVideoControllerView extends FrameLayout implements GestureDetector
     private LinearLayout llTop;
     private LinearLayout llVolume;
     private RelativeLayout rlVideoBrightness;
+    private RelativeLayout rlVideoPosition;
     private ImageView ivClose;
     private ImageView ivBack;
     private ImageView ivFull;
@@ -44,6 +43,8 @@ public class GVideoControllerView extends FrameLayout implements GestureDetector
     private TextView tvVideoBrightness;
     private TextView tvProgressTime;
     private TextView tvTitle;
+    private TextView tvDuration;
+    private TextView tvCurrent;
     private ImageView ivCover;
     private long videoProgress;
     private long duration;
@@ -57,6 +58,7 @@ public class GVideoControllerView extends FrameLayout implements GestureDetector
     private float scrollX;
     private float scrollY;
     private RectF leftScreenRect;
+    private long setVideoCurrent;
 
     public GVideoControllerView(Context context) {
         this(context, null);
@@ -91,9 +93,13 @@ public class GVideoControllerView extends FrameLayout implements GestureDetector
         pbolume = findViewById(R.id.pb_volume);
         rlVideoBrightness = findViewById(R.id.rl_video_brightness);
         tvVideoBrightness = findViewById(R.id.tv_video_brightness);
+        rlVideoPosition = findViewById(R.id.rl_video_position);
+        tvCurrent = findViewById(R.id.tv_current);
+        tvDuration = findViewById(R.id.tv_duration);
 
         llVolume.setVisibility(GONE);
         rlVideoBrightness.setVisibility(GONE);
+        rlVideoPosition.setVisibility(GONE);
         ivClose.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -353,8 +359,13 @@ public class GVideoControllerView extends FrameLayout implements GestureDetector
                 llVolume.setVisibility(GONE);
             if (rlVideoBrightness.getVisibility() == VISIBLE)
                 rlVideoBrightness.setVisibility(GONE);
+            if (rlVideoPosition.getVisibility() == VISIBLE) {
+                //设定时间
+                videoView.setProgress(setVideoCurrent);
+                rlVideoPosition.setVisibility(GONE);
+            }
             isScrollVolumeing = false;
-            isScrollLighting = false;
+            isScrollBrightness = false;
             isScrollPosition = false;
         }
         return true;
@@ -385,13 +396,15 @@ public class GVideoControllerView extends FrameLayout implements GestureDetector
     private float startY;
     private boolean isScrollVolume; //是否是调节音量
     private boolean isScrollVolumeing; ///是否正在调节声音
-    private boolean isScrollLighting; //是否正在调节亮度
+    private boolean isScrollBrightness; //是否正在调节亮度
     private boolean isScrollPosition; //是否正在调节进度
     private int startVolumeValue;
     private float startBrightness;
+    private float startCurrent;
 
     @Override
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+        if (uiState == GPlayViewUIState.LIST_ITEM) return false;
         if (!isScroll) {
             //清零上次的
             scrollX = 0f;
@@ -409,7 +422,7 @@ public class GVideoControllerView extends FrameLayout implements GestureDetector
 
         if ((Math.abs(scrollX) < Math.abs(scrollY)
                 || isScrollVolumeing
-                || isScrollLighting)
+                || isScrollBrightness)
                 && !isScrollPosition) {
             //上下滚动
             //阀值 高度的一半==100  view高度/2/100 等于1个点的需要移动的像素值
@@ -433,7 +446,7 @@ public class GVideoControllerView extends FrameLayout implements GestureDetector
                 videoView.setVolume(volume * 1.0f / 100);//调节真实的音量
             } else {
                 //调节亮度
-                isScrollLighting = true;
+                isScrollBrightness = true;
                 if (rlVideoBrightness.getVisibility() != VISIBLE) {
                     rlVideoBrightness.setVisibility(VISIBLE);
                     startBrightness = videoView.getCurrentBrightness() * 100;
@@ -451,8 +464,20 @@ public class GVideoControllerView extends FrameLayout implements GestureDetector
         } else if (Math.abs(scrollX) > Math.abs(scrollY)
                 || isScrollPosition) {
             //左右移动
+            float size = getWidth() * 1.0f / duration;
             isScrollPosition = true;
-            Log.e("onScroll", "调节进度 scrollX:" + scrollX);
+            if (rlVideoPosition.getVisibility() != VISIBLE) {
+                rlVideoPosition.setVisibility(VISIBLE);
+                tvCurrent.setText(GPlayUtils.videoTime2Value(videoProgress));
+                tvDuration.setText("/" + GPlayUtils.videoTime2Value(duration));
+                startCurrent = videoProgress;
+            }
+            float value = (-scrollX) / size; //要调节的值
+            long current = (long) (startCurrent + value);
+            if (current < 0) current = 0;
+            else if (current > duration) current = duration;
+            tvCurrent.setText(GPlayUtils.videoTime2Value(current));
+            setVideoCurrent = current;
         }
 
         return false;

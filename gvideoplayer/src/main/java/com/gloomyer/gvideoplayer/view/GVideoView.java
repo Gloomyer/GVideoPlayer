@@ -465,7 +465,7 @@ public class GVideoView extends FrameLayout implements TextureView.SurfaceTextur
      *
      * @param progress
      */
-    public void setProgress(int progress) {
+    public void setProgress(long progress) {
         mMeidiaPlayer.setProgress(progress);
     }
 
